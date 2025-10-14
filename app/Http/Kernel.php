@@ -39,19 +39,24 @@ class Kernel extends HttpKernel
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
+            // Use the throttle alias with api parameter
+            'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
     /**
-     * The application's route middleware.
+     * The application's middleware aliases.
      *
      * These middleware may be assigned to groups or used individually.
+     * Laravel expects a $middlewareAliases property (introduced in newer versions)
+     * instead of the older $routeMiddleware. Defining this ensures alias
+     * resolution (eg. 'admin') works correctly when the framework resolves
+     * middleware during request termination.
      *
      * @var array<string, class-string|string>
      */
-    protected $routeMiddleware = [
+    protected $middlewareAliases = [
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
@@ -65,4 +70,14 @@ class Kernel extends HttpKernel
         // Custom admin middleware
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
     ];
-} 
+
+    /**
+     * Backwards-compatible route middleware mapping for older Laravel versions
+     * which reference $routeMiddleware. Keep this in sync with middlewareAliases.
+     *
+     * @var array<string, class-string|string>
+     */
+    protected $routeMiddleware = [
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
+    ];
+}

@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Illuminate\Support\Facades\Storage;
+// QR code generation removed to simplify install and avoid dependency issues in some environments
 
 class RegisteredUserController extends Controller
 {
@@ -45,12 +44,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        // Generate QR code and save to storage as SVG (no Imagick/GD required)
-        $qrImage = QrCode::format('svg')->size(300)->generate($user->student_id);
-        $qrPath = 'qr_codes/user_' . $user->id . '.svg';
-        Storage::disk('public')->put($qrPath, $qrImage);
-        $user->qr_code = $qrPath;
-        $user->save();
+    // Note: QR generation intentionally omitted. If you want QR support re-add generation and storage.
 
         event(new Registered($user));
 

@@ -28,6 +28,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Redirect all authenticated users to dashboard (tests expect this behaviour)
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

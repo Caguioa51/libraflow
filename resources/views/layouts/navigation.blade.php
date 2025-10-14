@@ -1,53 +1,91 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
-	<div class="container">
-		<a class="navbar-brand" href="{{ route('dashboard') }}">LibraFlow</a>
-		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-                        </button>
-		<div class="collapse navbar-collapse" id="mainNavbar">
-			<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-				<li class="nav-item">
-					<a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link {{ request()->routeIs('books.*') ? 'active' : '' }}" href="{{ route('books.index') }}">Books</a>
-				</li>
-            @if(!auth()->user()->isAdmin())
-				<li class="nav-item">
-					<a class="nav-link {{ request()->routeIs('borrowings.self_checkout') ? 'active' : '' }}" href="{{ route('borrowings.self_checkout') }}">Self-Checkout</a>
-				</li>
-            @endif
-            @if(auth()->user()->isAdmin())
-				<li class="nav-item">
-					<a class="nav-link {{ request()->routeIs('borrowings.*') ? 'active' : '' }}" href="{{ route('borrowings.index') }}">Borrowings</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}" href="{{ route('analytics.index') }}">Analytics</a>
-				</li>
-            @endif
-			</ul>
-			<ul class="navbar-nav ms-auto">
-				<li class="nav-item dropdown">
-					<a class="nav-link" href="#" id="userDropdown" role="button" onclick="toggleDropdown(event)">
-						{{ Auth::user()->name }} <span class="text-muted small">({{ Auth::user()->student_id }})</span>
-						<span class="dropdown-arrow">▼</span>
-					</a>
-					<ul class="dropdown-menu dropdown-menu-end" id="userDropdownMenu" style="display: none;">
-						<li><a class="dropdown-item" href="{{ route('settings') }}">Settings</a></li>
-						<li><a class="dropdown-item" href="{{ route('profile.qr') }}">My QR Code</a></li>
+<nav class="navbar navbar-dark bg-dark border-bottom border-secondary py-2">
+    <div class="container-fluid">
+        <!-- Left side - LibraFlow logo -->
+        <div class="d-flex align-items-center">
+            <a class="navbar-brand text-white fw-bold fs-6 mb-0" href="{{ route('dashboard') }}">
+                <i class="bi bi-book me-2"></i>LibraFlow
+            </a>
+        </div>
+
+        <!-- Right side - Navigation buttons -->
+        <div class="d-flex align-items-center ms-auto">
+            <ul class="navbar-nav flex-row mb-0">
                 @if(auth()->user()->isAdmin())
-						<li><a class="dropdown-item" href="{{ route('admin.settings') }}">System Settings</a></li>
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-white px-2 py-1" href="{{ route('admin.announcements.index') }}">
+                            <i class="bi bi-megaphone me-1"></i>Announcements
+                        </a>
+                    </li>
                 @endif
-						<li><hr class="dropdown-divider"></li>
-						<li>
-							<form method="POST" action="{{ route('logout') }}" class="d-inline">
-                    @csrf
-								<button type="submit" class="dropdown-item text-danger border-0 bg-transparent w-100 text-start">Log Out</button>
-                </form>
-						</li>
-					</ul>
-				</li>
-			</ul>
+
+                @if(auth()->user()->isAdmin())
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-white px-2 py-1" href="{{ route('borrowings.admin_borrow') }}">
+                            <i class="bi bi-person-plus me-1"></i>Borrow for User
+                        </a>
+                    </li>
+                @endif
+
+                @if(auth()->user()->isAdmin())
+                    <li class="nav-item me-3">
+                        <a class="nav-link text-white px-2 py-1 {{ request()->routeIs('admin.users.*') ? 'bg-primary rounded' : '' }}"
+                           href="{{ route('admin.users.index') }}">
+                            <i class="bi bi-people me-1"></i>Users
+                        </a>
+                    </li>
+                @endif
+
+
+
+
+
+
+            </ul>
+
+            <!-- User Account Dropdown -->
+            <div class="dropdown ms-3">
+                <button class="btn btn-outline-light border-0 dropdown-toggle d-flex align-items-center"
+                        type="button" onclick="toggleDropdown(event)">
+                    @if(auth()->user()->profile_photo)
+                        <img src="{{ asset('storage/profile_photos/' . auth()->user()->profile_photo) }}"
+                             alt="Profile" class="rounded-circle me-2" width="24" height="24">
+                    @else
+                        <div class="bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center"
+                             style="width: 24px; height: 24px;">
+                            <i class="bi bi-person text-white" style="font-size: 12px;"></i>
+                        </div>
+                    @endif
+                    <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
+                    <i class="bi bi-chevron-down ms-1 dropdown-arrow"></i>
+                </button>
+
+                <div id="userDropdownMenu" class="dropdown-menu dropdown-menu-end"
+                     style="display: none; min-width: 200px;">
+                    <div class="px-3 py-2 border-bottom">
+                        <div class="fw-bold">{{ auth()->user()->name }}</div>
+                        <small class="text-muted">{{ auth()->user()->email }}</small>
+                    </div>
+
+                    <a class="dropdown-item" href="{{ route('settings') }}">
+                        <i class="bi bi-gear me-2"></i>Account Settings
+                    </a>
+
+                    @if(auth()->user()->isAdmin())
+                        <div class="border-top my-1"></div>
+                        <a class="dropdown-item" href="{{ route('admin.settings') }}">
+                            <i class="bi bi-gear-fill me-2"></i>Admin Settings
+                        </a>
+                    @endif
+
+                    <div class="border-top my-1"></div>
+                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </nav>

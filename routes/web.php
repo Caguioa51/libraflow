@@ -8,13 +8,11 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\BorrowingController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\SystemSettingsController;
 
 Route::get('/', function () {
-    return Auth::check()
-        ? view('dashboard')
-        : view('welcome');
+    // Always show the public welcome page; the page itself adapts links based on auth state
+    return view('welcome');
 });
 
 Route::get('/dashboard', function () {
@@ -24,11 +22,11 @@ Route::get('/dashboard', function () {
 })->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', function() { return redirect()->route('settings'); });
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/download-data', [ProfileController::class, 'downloadData'])->name('profile.download_data');
-    Route::get('/profile/qr', [\App\Http\Controllers\ProfileController::class, 'qr'])->name('profile.qr');
+    // QR code feature removed: previously provided a per-user QR code view.
 
     Route::resource('books', BookController::class);
     Route::resource('categories', CategoryController::class);
@@ -38,21 +36,53 @@ Route::middleware('auth')->group(function () {
     Route::get('/my-borrowings', [BorrowingController::class, 'myHistory'])->name('borrowings.my_history');
     Route::get('/admin/report', [BorrowingController::class, 'report'])->name('borrowings.report');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
-    
+
+    // Book reservation system
+    Route::post('/books/{book}/reserve', [BookController::class, 'reserve'])->name('books.reserve');
+    Route::delete('/books/{book}/reserve', [BookController::class, 'cancelReservation'])->name('books.cancel_reservation');
+    Route::get('/my-reservations', [BookController::class, 'myReservations'])->name('books.my_reservations');
+
     // Self-service routes
     Route::get('/self-checkout', [BorrowingController::class, 'selfCheckout'])->name('borrowings.self_checkout');
     Route::post('/borrowings/{borrowing}/renew', [BorrowingController::class, 'renew'])->name('borrowings.renew');
     Route::post('/borrowings/{borrowing}/pay-fine', [BorrowingController::class, 'payFine'])->name('borrowings.pay_fine');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
+
     Route::get('/admin/borrow', [\App\Http\Controllers\BorrowingController::class, 'adminBorrow'])->name('borrowings.admin_borrow');
-    Route::post('/admin/borrow/user-lookup', [\App\Http\Controllers\BorrowingController::class, 'adminUserLookup'])->name('borrowings.admin_user_lookup');
+    Route::post('/admin/borrow', [\App\Http\Controllers\BorrowingController::class, 'adminBorrow'])->name('borrowings.admin_borrow.post');
+    Route::post('/admin/borrow/rfid-lookup', [\App\Http\Controllers\BorrowingController::class, 'adminRfidLookup'])->name('borrowings.admin_rfid_lookup');
+    Route::post('/admin/borrow/user-search', [\App\Http\Controllers\BorrowingController::class, 'adminUserSearch'])->name('borrowings.admin_user_search');
     Route::get('/admin/update-fines', [\App\Http\Controllers\BorrowingController::class, 'updateFines'])->name('borrowings.update_fines');
     Route::post('/admin/update-fines', [\App\Http\Controllers\BorrowingController::class, 'updateFines'])->name('borrowings.update_fines.post');
-    Route::get('/admin/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
-    Route::get('/admin/settings', [SystemSettingsController::class, 'index'])->name('admin.settings');
-    Route::post('/admin/settings', [SystemSettingsController::class, 'update'])->name('admin.settings.update');
+    // Announcements management for admins
+    Route::get('/admin/announcements', [\App\Http\Controllers\Admin\AnnouncementController::class, 'index'])->name('admin.announcements.index');
+    Route::post('/admin/announcements', [\App\Http\Controllers\Admin\AnnouncementController::class, 'store'])->name('admin.announcements.store');
+    // Admin settings (SystemSettingsController expects an admin settings page)
+    Route::get('/admin/settings', [\App\Http\Controllers\SystemSettingsController::class, 'index'])->name('admin.settings');
+    Route::post('/admin/settings', [\App\Http\Controllers\SystemSettingsController::class, 'update'])->name('admin.settings.update');
+    // User management for admins
+    Route::get('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::get('/admin/users/{user}/borrow', [\App\Http\Controllers\Admin\UserManagementController::class, 'borrowForUser'])->name('admin.users.borrow_for_user');
+    Route::get('/admin/users/{user}/history', [\App\Http\Controllers\Admin\UserManagementController::class, 'viewHistory'])->name('admin.users.view_history');
+    // RFID management for admins
+    Route::get('/admin/rfid-scan', [\App\Http\Controllers\Admin\RfidController::class, 'scan'])->name('admin.rfid.scan');
+    Route::post('/admin/rfid-lookup', [\App\Http\Controllers\Admin\RfidController::class, 'lookup'])->name('admin.rfid.lookup');
+    Route::post('/admin/assign-rfid', [\App\Http\Controllers\Admin\RfidController::class, 'assign'])->name('admin.rfid.assign');
 });
 
 require __DIR__.'/auth.php';
+
+// Testing endpoint (requires authentication and CSRF). Controller still enforces local environment.
+Route::middleware('auth')->post('/testing/borrow', [\App\Http\Controllers\BorrowingController::class, 'testingBorrow'])->name('testing.borrow.auth');
+
+// Local-only token-based testing endpoint: ensure API route is also registered so route:list shows it.
+// Keep the API-only route in routes/api.php, but register a forwarding route here under the 'api' prefix
+// to make sure php artisan route:list --path=api can find it when using the built-in server.
+Route::prefix('api')->middleware('api')->group(function () {
+    // Ensure this testing route bypasses CSRF middleware (page-expired). It is still
+    // guarded inside the controller by app()->environment('local') and X-TEST-SECRET.
+    Route::post('/testing/borrow/no-csrf', [\App\Http\Controllers\BorrowingController::class, 'testingBorrowNoCsrf'])
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+});

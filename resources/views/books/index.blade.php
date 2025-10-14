@@ -36,6 +36,9 @@
                 <th>Author</th>
                 <th>Category</th>
                 <th>Genre</th>
+                <th>Quantity</th>
+                <th>Available</th>
+                <th>Location</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -47,6 +50,9 @@
                 <td>{{ $book->author->name ?? '-' }}</td>
                 <td>{{ $book->category->name ?? '-' }}</td>
                 <td>{{ $book->genre }}</td>
+                <td>{{ $book->quantity ?? 0 }}</td>
+                <td>{{ $book->available_quantity ?? 0 }}</td>
+                <td>{{ $book->location ?? '-' }}</td>
                 <td>{{ ucfirst($book->status) }}</td>
                 <td>
                     <a href="{{ route('books.show', $book) }}" class="btn btn-info btn-sm">View</a>
@@ -77,4 +83,4 @@
         {{ $books->links() }}
     </div>
 </div>
-@endsection 
+@endsection

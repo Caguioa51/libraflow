@@ -27,4 +27,13 @@
 <div class="mb-3">
     <label for="description" class="form-label">Description</label>
     <textarea name="description" id="description" class="form-control">{{ old('description', $book->description ?? '') }}</textarea>
-</div> 
+</div>
+<div class="mb-3">
+    <label for="location" class="form-label">Location</label>
+    <input type="text" name="location" id="location" class="form-control" value="{{ old('location', $book->location ?? '') }}">
+</div>
+<div class="mb-3">
+    <label for="quantity" class="form-label">Quantity</label>
+    <input type="number" name="quantity" id="quantity" min="1" class="form-control" value="{{ old('quantity', $book->quantity ?? 1) }}" required>
+</div>
+

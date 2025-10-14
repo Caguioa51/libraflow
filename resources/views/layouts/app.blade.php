@@ -9,33 +9,34 @@
 
         <!-- PWA Meta Tags -->
         <meta name="description" content="Dagupan City National High School Library Management System">
-        <meta name="theme-color" content="#4e73df">
+        <meta name="theme-color" content="#4f46e5">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <meta name="apple-mobile-web-app-title" content="LibraFlow">
-        
+
         <!-- PWA Manifest -->
         <link rel="manifest" href="/manifest.json">
-        
+
         <!-- Apple Touch Icons -->
         <link rel="apple-touch-icon" href="/favicon.ico">
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-        
+
         <!-- Fallback CSS if Vite fails -->
         <style>
             /* Fallback styles if Vite assets don't load */
             .btn { display: inline-block; padding: 0.375rem 0.75rem; margin-bottom: 0; font-size: 1rem; font-weight: 400; line-height: 1.5; text-align: center; text-decoration: none; vertical-align: middle; cursor: pointer; border: 1px solid transparent; border-radius: 0.375rem; }
             .btn-primary { color: #fff; background-color: #0d6efd; border-color: #0d6efd; }
             .btn-success { color: #fff; background-color: #198754; border-color: #198754; }
-            .btn-warning { color: #000; background-color: #ffc107; border-color: #ffc107; }
+            .btn-warning { color: #fff; background-color: #ffc107; border-color: #ffc107; }
             .btn-danger { color: #fff; background-color: #dc3545; border-color: #dc3545; }
-            .btn-info { color: #000; background-color: #0dcaf0; border-color: #0dcaf0; }
+            .btn-info { color: #fff; background-color: #0dcaf0; border-color: #0dcaf0; }
             .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; border-radius: 0.25rem; }
             .table { width: 100%; margin-bottom: 1rem; color: #212529; border-collapse: collapse; }
             .table th, .table td { padding: 0.75rem; vertical-align: top; border-top: 1px solid #dee2e6; }
@@ -46,105 +47,123 @@
         </style>
 
         <!-- Bootstrap CSS -->
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+        <!-- Bootstrap Icons -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
         <style>
-            body { background: #f8fafc; }
+            body {
+                background: #ced4da !important;
+            }
             .navbar-brand { font-weight: bold; letter-spacing: 1px; }
             .footer { background: #222; color: #fff; padding: 1rem 0; text-align: center; margin-top: 3rem; }
-            .card { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+            .card {
+                box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+                border: 1px solid #e9ecef !important;
+                background-color: #ffffff !important;
+                border-radius: 8px !important;
+            }
             .nav-link.active, .nav-link:focus { font-weight: bold; color: #0d6efd !important; }
-            
+
             /* Fix pagination styling */
             .pagination { display: flex; justify-content: center; align-items: center; margin: 1rem 0; }
             .pagination .page-link { display: inline-block; padding: 0.5rem 1rem; margin: 0 0.25rem; background-color: #fff; border: 1px solid #dee2e6; color: #0d6efd; text-decoration: none; border-radius: 0.375rem; }
             .pagination .page-link:hover { background-color: #e9ecef; border-color: #dee2e6; color: #0a58ca; }
             .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
             .pagination .page-item.disabled .page-link { color: #6c757d; background-color: #fff; border-color: #dee2e6; cursor: not-allowed; }
-            
+
             /* Hide any problematic arrows or loading indicators */
             .loading-arrow, .loading-spinner, .vite-loading {
                 display: none !important;
             }
-            
+
             /* Ensure proper layout */
             .container { position: relative; z-index: 1; }
             main { position: relative; z-index: 1; }
-            
-            /* Custom dropdown menu styling */
-            .dropdown { position: relative; }
-            .dropdown-menu { 
-                position: absolute; 
-                top: 100%; 
-                right: 0; 
-                z-index: 9999; 
-                min-width: 180px; 
-                padding: 0.5rem 0; 
-                margin: 0.125rem 0 0; 
-                background-color: #fff; 
-                border: 1px solid rgba(0,0,0,.15); 
-                border-radius: 0.375rem; 
-                box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
-                display: none;
-                pointer-events: auto;
+
+            /* Ensure navbar is always visible */
+            .navbar-collapse {
+                display: flex !important;
             }
-            .dropdown-menu.show { display: block; }
-            .dropdown-item { 
-                display: block; 
-                width: 100%; 
-                padding: 0.5rem 1rem; 
-                clear: both; 
-                font-weight: 400; 
-                color: #212529; 
-                text-align: inherit; 
-                text-decoration: none; 
-                white-space: nowrap; 
-                background-color: transparent; 
-                border: 0; 
+
+            /* Remove blue focus/active outline */
+            .nav-link:focus, .nav-link:active,
+            .btn:focus, .btn:active {
+                outline: none !important;
+                box-shadow: none !important;
+            }
+
+            /* Custom active state for nav links */
+            .nav-link.bg-primary {
+                background-color: #0d6efd !important;
+                color: white !important;
+            }
+
+            /* User Account Dropdown Styles */
+            .dropdown-menu {
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                border: 1px solid #dee2e6;
+                background-color: #ffffff;
+            }
+
+            .dropdown-item {
+                padding: 0.5rem 1rem;
+                color: #212529;
+                text-decoration: none;
+                display: block;
+                width: 100%;
+                border: none;
+                background: none;
+                text-align: left;
                 cursor: pointer;
             }
-            .dropdown-item:hover, .dropdown-item:focus { 
-                color: #1e2125; 
-                background-color: #e9ecef; 
-                text-decoration: none;
+
+            .dropdown-item:hover {
+                background-color: #f8f9fa;
+                color: #0d6efd;
             }
-            .dropdown-item.active, .dropdown-item:active { 
-                color: #fff; 
-                background-color: #0d6efd; 
+
+            .dropdown-item.text-danger:hover {
+                background-color: #f8d7da;
+                color: #721c24;
             }
-            .dropdown-item.disabled, .dropdown-item:disabled { 
-                color: #adb5bd; 
-                pointer-events: none; 
-                background-color: transparent; 
-            }
-            .dropdown-divider { 
-                height: 0; 
-                margin: 0.5rem 0; 
-                overflow: hidden; 
-                border-top: 1px solid rgba(0,0,0,.15); 
-            }
-            .dropdown-arrow { 
-                font-size: 0.8em; 
-                margin-left: 0.5rem; 
+
+            .dropdown-arrow.rotated {
+                transform: rotate(180deg);
                 transition: transform 0.2s ease;
             }
-            .dropdown-arrow.rotated { 
-                transform: rotate(180deg); 
-            }
-            
-            /* Ensure navbar doesn't interfere with dropdown */
-            .navbar { z-index: 1000; }
-            .navbar-nav .dropdown { z-index: 10000; }
-            
-            /* Make sure dropdown items are clickable */
-            .dropdown-item {
-                position: relative;
-                z-index: 10001;
-                pointer-events: auto;
+
+            @media (max-width: 991.98px) {
+                .navbar-collapse {
+                    flex-direction: column;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    z-index: 1000;
+                }
             }
         </style>
     </head>
     <body>
         @include('layouts.navigation')
+
+        @if(!request()->routeIs('dashboard') && !request()->routeIs('welcome'))
+        <div class="container-fluid py-2 bg-light border-bottom">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Previous Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="container py-4">
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -167,7 +186,7 @@
         </footer>
         <!-- Bootstrap JS Bundle -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-        
+
         <!-- PWA Service Worker Registration -->
         <script>
             if ('serviceWorker' in navigator) {
@@ -182,16 +201,16 @@
                 });
             }
         </script>
-        
+
         <!-- Custom Dropdown JavaScript -->
         <script>
             function toggleDropdown(event) {
                 event.preventDefault();
                 event.stopPropagation();
-                
+
                 const dropdownMenu = document.getElementById('userDropdownMenu');
                 const dropdownArrow = document.querySelector('.dropdown-arrow');
-                
+
                 if (dropdownMenu && dropdownArrow) {
                     if (dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '') {
                         dropdownMenu.style.display = 'block';
@@ -206,13 +225,13 @@
                     }
                 }
             }
-            
+
             // Close dropdown when clicking outside
             document.addEventListener('click', function(event) {
                 const dropdownMenu = document.getElementById('userDropdownMenu');
                 const dropdownToggle = document.getElementById('userDropdown');
                 const dropdownArrow = document.querySelector('.dropdown-arrow');
-                
+
                 if (dropdownMenu && dropdownToggle && dropdownArrow) {
                     if (!dropdownToggle.contains(event.target) && !dropdownMenu.contains(event.target)) {
                         dropdownMenu.style.display = 'none';
@@ -220,7 +239,7 @@
                     }
                 }
             });
-            
+
             // Ensure dropdown items are clickable
             document.addEventListener('click', function(event) {
                 if (event.target.classList.contains('dropdown-item')) {

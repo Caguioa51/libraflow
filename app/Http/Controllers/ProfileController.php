@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
@@ -33,7 +34,12 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = $request->user();
-        $user->fill($request->validated());
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'profile_photo' => 'nullable|file|image|max:2048',
+        ]);
+        $user->fill($validated);
 
         \Log::info('Profile update request received', [
             'hasFile' => $request->hasFile('profile_photo'),
@@ -58,7 +64,7 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return Redirect::route('settings')->with('status', 'profile-updated');
+    return Redirect::route('settings')->with('success', 'Profile updated successfully!');
     }
 
     /**
@@ -107,19 +113,5 @@ class ProfileController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function qr()
-    {
-        $user = auth()->user();
-
-        // Ensure the user's QR exists; generate on-demand if missing
-        $qrPath = $user->qr_code ?: ('qr_codes/user_' . $user->id . '.svg');
-        if (!$user->qr_code || !Storage::disk('public')->exists($qrPath)) {
-            $qrImage = QrCode::format('svg')->size(300)->generate($user->student_id ?? (string) $user->id);
-            Storage::disk('public')->put($qrPath, $qrImage);
-            $user->qr_code = $qrPath;
-            $user->save();
-        }
-
-        return view('profile.qr', compact('user'));
-    }
+    // QR feature removed: QR generation and view were deleted.
 }

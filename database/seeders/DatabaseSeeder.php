@@ -33,11 +33,12 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+        // Ensure we have a fresh admin with known credentials
+        User::create([
+            'name' => 'Admin Administrator',
+            'email' => 'admin@gmail.com',
             'role' => 'admin',
-            'password' => bcrypt('password'),
+            'password' => bcrypt('11111111'),
         ]);
 
         // Seed all real categories
@@ -308,18 +309,9 @@ class DatabaseSeeder extends Seeder
             'The Case for the Book of Malachi',
         ];
 
-        // Seed books with random real categories and authors
-        $bookTitles = [...array_slice($fantasyTitles, 0, 50)]; // Use your list from BookFactory
-        foreach ($bookTitles as $title) {
-            $categoryId = $categoryIds[array_rand($categoryIds)];
-            $categoryName = Category::find($categoryId)->name;
-            \App\Models\Book::create([
-                'title' => $title,
-                'author_id' => $authorIds[array_rand($authorIds)],
-                'category_id' => $categoryId,
-                'genre' => $categoryName,
-                'status' => 'available',
-            ]);
-        }
+        // Call the RealBooksSeeder to populate with school-appropriate books
+        $this->call([
+            RealBooksSeeder::class,
+        ]);
     }
 }

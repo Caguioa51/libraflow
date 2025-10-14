@@ -30,13 +30,11 @@
                     <div class="card-body text-center">
                         <h5 class="card-title mb-3">My Library QR Code</h5>
                         <img src="{{ asset('storage/' . $user->qr_code) }}" alt="QR Code" class="img-fluid mb-2" style="max-width: 200px;">
-                        <div>
-                            <small class="text-muted">Scan this code at the library to borrow books.</small>
-                        </div>
                     </div>
                 </div>
             </div>
             @endif
+                {{-- QR Code section removed --}}
             <div class="mb-4">
                 <div class="card shadow-sm">
                     <div class="card-body">

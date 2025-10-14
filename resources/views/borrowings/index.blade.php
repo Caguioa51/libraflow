@@ -4,9 +4,7 @@
 <div class="container">
     <h1 class="mb-4">All Borrowings</h1>
     @if(auth()->user()->isAdmin())
-        <a href="{{ route('borrowings.admin_borrow') }}" class="btn btn-primary mb-3">
-            <i class="fas fa-qrcode"></i> Borrow for User (Scan QR)
-        </a>
+
     @endif
     <table class="table table-bordered table-striped">
         <thead>
@@ -51,4 +49,4 @@
         {{ $borrowings->links() }}
     </div>
 </div>
-@endsection 
+@endsection

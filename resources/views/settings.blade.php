@@ -7,6 +7,7 @@
             <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="tab">Profile</a>
             <a href="#account" class="list-group-item list-group-item-action" data-bs-toggle="tab">Account</a>
             <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="tab">Security</a>
+            <a href="#logout" class="list-group-item list-group-item-action text-danger" data-bs-toggle="tab">Logout</a>
         </div>
     </div>
     <div class="col-md-9">
@@ -69,6 +70,22 @@
                     </div>
                 </div>
             </div>
+            <div class="tab-pane fade" id="logout">
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">Logout</div>
+                    <div class="card-body">
+                        <p class="mb-3">You are currently logged in as <strong>{{ auth()->user()->name }}</strong> ({{ auth()->user()->email }}).</p>
+                        <p class="mb-4">Click the button below to securely log out of your account.</p>
+                        <a class="btn btn-danger btn-lg" href="{{ route('logout') }}"
+                           onclick="event.preventDefault(); document.getElementById('logout-form-settings').submit();">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </a>
+                        <form id="logout-form-settings" method="POST" action="{{ route('logout') }}" style="display: none;">
+                            @csrf
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -82,4 +99,4 @@
         });
     });
 </script>
-@endsection 
+@endsection
