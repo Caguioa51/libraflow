@@ -11,6 +11,30 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\DatabaseSeederController;
 
+// TEMPORARY ADMIN CREATION ROUTE - REMOVE AFTER USE
+Route::get('/temp-create-admin', function () {
+    try {
+        $user = \App\Models\User::updateOrCreate(
+            ['email' => 'admin@libraflow.com'],
+            [
+                'name' => 'Administrator',
+                'password' => \Hash::make('admin123'),
+                'role' => 'admin',
+                'email_verified_at' => now(),
+            ]
+        );
+        
+        return "✅ Admin user created successfully!<br><br>
+                <strong>Login credentials:</strong><br>
+                Email: admin@libraflow.com<br>
+                Password: admin123<br><br>
+                <strong>⚠️ IMPORTANT:</strong> Remove this route from your code after creating the admin!<br>
+                <a href='/admin/database-seeder'>Go to Database Seeder</a>";
+    } catch (\Exception $e) {
+        return "Error creating admin: " . $e->getMessage();
+    }
+})->name('temp-create-admin');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
