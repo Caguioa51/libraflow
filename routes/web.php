@@ -49,6 +49,33 @@ Route::get('/create-admin-simple', function () {
     }
 })->name('create-admin-simple');
 
+// DEBUG ROUTE - Test basic functionality
+Route::get('/debug-test', function () {
+    try {
+        // Test basic database connection
+        $pdo = new PDO("pgsql:host=" . env('DB_HOST') . ";port=" . env('DB_PORT') . ";dbname=" . env('DB_DATABASE'), env('DB_USERNAME'), env('DB_PASSWORD'));
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
+        $userCount = $stmt->fetch()['count'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM books");
+        $bookCount = $stmt->fetch()['count'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrowings");
+        $borrowingCount = $stmt->fetch()['count'];
+        
+        return "<h1>✅ Database Connection Test</h1>
+               <p><strong>Users:</strong> {$userCount}</p>
+               <p><strong>Books:</strong> {$bookCount}</p>
+               <p><strong>Borrowings:</strong> {$borrowingCount}</p>
+               <p><strong>Status:</strong> Database is working!</p>";
+               
+    } catch (Exception $e) {
+        return "<h1>❌ Database Connection Error</h1>
+               <p>Error: " . $e->getMessage() . "</p>
+               <p>Please check your database configuration.</p>";
+    }
+})->name('debug-test');
+
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
@@ -71,6 +98,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::resource('borrowings', BorrowingController::class);
     Route::patch('borrowings/{borrowing}/return', [BorrowingController::class, 'update'])->name('borrowings.return');
+    Route::post('borrowings/{borrowing}/mark-as-returned', [BorrowingController::class, 'markAsReturned'])->name('borrowings.mark-as-returned');
     Route::get('/my-borrowings', [BorrowingController::class, 'myHistory'])->name('borrowings.my_history');
     Route::get('/admin/report', [BorrowingController::class, 'report'])->name('borrowings.report');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
