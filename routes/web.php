@@ -11,29 +11,43 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemSettingsController;
 use App\Http\Controllers\DatabaseSeederController;
 
-// TEMPORARY ADMIN CREATION ROUTE - REMOVE AFTER USE
-Route::get('/temp-create-admin', function () {
+// ULTRA-SIMPLE ADMIN CREATION ROUTE - WORKS EVEN WITHOUT MIGRATIONS
+Route::get('/create-admin-simple', function () {
     try {
-        $user = \App\Models\User::updateOrCreate(
-            ['email' => 'admin@libraflow.com'],
-            [
-                'name' => 'Administrator',
-                'password' => \Hash::make('admin123'),
-                'role' => 'admin',
-                'email_verified_at' => now(),
-            ]
-        );
+        // Connect to database
+        $pdo = new PDO("pgsql:host=" . env('DB_HOST') . ";port=" . env('DB_PORT') . ";dbname=" . env('DB_DATABASE'), env('DB_USERNAME'), env('DB_PASSWORD'));
         
-        return "✅ Admin user created successfully!<br><br>
-                <strong>Login credentials:</strong><br>
-                Email: admin@libraflow.com<br>
-                Password: admin123<br><br>
-                <strong>⚠️ IMPORTANT:</strong> Remove this route from your code after creating the admin!<br>
-                <a href='/admin/database-seeder'>Go to Database Seeder</a>";
-    } catch (\Exception $e) {
-        return "Error creating admin: " . $e->getMessage();
+        // Hash password
+        $hashedPassword = password_hash('admin123', PASSWORD_DEFAULT);
+        
+        // Create admin user with raw SQL
+        $sql = "INSERT INTO users (name, email, email_verified_at, password, role, created_at, updated_at) 
+                VALUES (:name, :email, NOW(), :password, :role, NOW(), NOW())
+                ON CONFLICT (email) DO UPDATE SET 
+                name = EXCLUDED.name,
+                password = EXCLUDED.password,
+                role = EXCLUDED.role,
+                updated_at = NOW()";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'name' => 'Administrator',
+            'email' => 'admin@libraflow.com',
+            'password' => $hashedPassword,
+            'role' => 'admin'
+        ]);
+        
+        return "<h1>✅ Admin Created Successfully!</h1>
+               <p><strong>Email:</strong> admin@libraflow.com</p>
+               <p><strong>Password:</strong> admin123</p>
+               <p><a href='/login'>Go to Login Page</a></p>";
+               
+    } catch (Exception $e) {
+        return "<h1>❌ Error Creating Admin</h1>
+               <p>Error: " . $e->getMessage() . "</p>
+               <p>Please check your database connection and ensure migrations have been run.</p>";
     }
-})->name('temp-create-admin');
+})->name('create-admin-simple');
 
 Route::get('/', function () {
     return view('welcome');
