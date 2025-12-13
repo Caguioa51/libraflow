@@ -5,10 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
-use App\Models\Book;
-use App\Models\Author;
-use App\Models\Category;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeederController extends Controller
 {
@@ -17,15 +14,26 @@ class DatabaseSeederController extends Controller
      */
     public function index()
     {
-        // Temporarily allow access in production for initial setup
-        // REMOVE THIS COMMENT AFTER SEEDING IS COMPLETE
+        try {
+            // Check if we can connect to database
+            DB::connection()->getPdo();
+            
+            $users = $this->safeCount('users');
+            $books = $this->safeCount('books');
+            $authors = $this->safeCount('authors');
+            $categories = $this->safeCount('categories');
 
-        $users = User::count();
-        $books = Book::count();
-        $authors = Author::count();
-        $categories = Category::count();
-
-        return view('admin.database-seeder', compact('users', 'books', 'authors', 'categories'));
+            return view('admin.database-seeder', compact('users', 'books', 'authors', 'categories'));
+            
+        } catch (\Exception $e) {
+            return view('admin.database-seeder', [
+                'users' => 0, 
+                'books' => 0, 
+                'authors' => 0, 
+                'categories' => 0,
+                'error' => 'Database connection error: ' . $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -34,6 +42,9 @@ class DatabaseSeederController extends Controller
     public function runAllSeeders(Request $request)
     {
         try {
+            // Check database connection first
+            DB::connection()->getPdo();
+            
             // Run AdminUserSeeder
             $this->runAdminUserSeeder();
             
@@ -51,15 +62,35 @@ class DatabaseSeederController extends Controller
     }
 
     /**
+     * Safe count for table existence check
+     */
+    private function safeCount($table)
+    {
+        try {
+            if (!Schema::hasTable($table)) {
+                return 0;
+            }
+            return DB::table($table)->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
      * Run AdminUserSeeder
      */
     private function runAdminUserSeeder()
     {
+        // Check if users table exists
+        if (!Schema::hasTable('users')) {
+            throw new \Exception('Users table does not exist. Please run migrations first.');
+        }
+
         $adminEmail = trim(strtolower(env('ADMIN_EMAIL', 'admin@libraflow.com')));
         $adminName = env('ADMIN_NAME', 'Administrator');
         $adminPassword = env('ADMIN_PASSWORD', 'admin123');
 
-        User::updateOrCreate(
+        DB::table('users')->updateOrInsert(
             ['email' => $adminEmail],
             [
                 'name' => $adminName,
@@ -79,6 +110,19 @@ class DatabaseSeederController extends Controller
      */
     private function runRealBooksSeeder()
     {
+        // Check if required tables exist
+        $requiredTables = ['books', 'authors', 'categories'];
+        foreach ($requiredTables as $table) {
+            if (!Schema::hasTable($table)) {
+                throw new \Exception("Table '{$table}' does not exist. Please run migrations first.");
+            }
+        }
+
+        // Clear existing books and related data
+        DB::table('books')->truncate();
+        DB::table('authors')->truncate();
+        DB::table('categories')->truncate();
+
         $books = [
             // Mathematics & Statistics (8 books)
             ['title' => 'Calculus and Analytic Geometry', 'author' => 'George B. Thomas Jr.', 'genre' => 'Mathematics', 'quantity' => 8],
@@ -106,7 +150,7 @@ class DatabaseSeederController extends Controller
             // Biology (5 books)
             ['title' => 'Campbell Biology', 'author' => 'Reece, Urry, Cain, Wasserman', 'genre' => 'Biology', 'quantity' => 7],
             ['title' => 'Human Anatomy and Physiology', 'author' => 'Gerard J. Tortora', 'genre' => 'Biology', 'quantity' => 6],
-            ['title' => 'Molecular Biology of the Cell', 'author' => 'Bruce Alberms', 'genre' => 'Biology', 'quantity' => 3],
+            ['title' => 'Molecular Biology of the Cell', 'author' => 'Bruce Alberts', 'genre' => 'Biology', 'quantity' => 3],
             ['title' => 'General Microbiology', 'author' => 'Tortora, Funke, Case', 'genre' => 'Biology', 'quantity' => 4],
             ['title' => 'Ecology: Concepts and Applications', 'author' => 'Manuel Molles', 'genre' => 'Biology', 'quantity' => 3],
 
@@ -156,27 +200,36 @@ class DatabaseSeederController extends Controller
             ['title' => 'Creative Writing', 'author' => 'Janet Burroway', 'genre' => 'Language', 'quantity' => 3],
         ];
 
-        // Clear existing books and related data
-        Book::truncate();
-        Author::truncate();
-        Category::truncate();
-
         foreach ($books as $b) {
-            $category = Category::firstOrCreate(['name' => $b['genre']], ['description' => 'Books in ' . $b['genre']]);
-            $author = Author::firstOrCreate(['name' => $b['author']], ['bio' => 'Author of ' . $b['genre'] . ' textbooks']);
+            // Create or find category
+            $category = DB::table('categories')->updateOrCreate(
+                ['name' => $b['genre']], 
+                ['description' => 'Books in ' . $b['genre']]
+            );
+            $categoryId = $category['id'];
+
+            // Create or find author
+            $author = DB::table('authors')->updateOrCreate(
+                ['name' => $b['author']], 
+                ['bio' => 'Author of ' . $b['genre'] . ' textbooks']
+            );
+            $authorId = $author['id'];
 
             $quantity = $b['quantity'] ?? 3;
             $available = $quantity;
 
-            Book::create([
+            // Create book
+            DB::table('books')->insert([
                 'title' => $b['title'],
-                'author_id' => $author->id,
-                'category_id' => $category->id,
+                'author_id' => $authorId,
+                'category_id' => $categoryId,
                 'status' => 'available',
                 'quantity' => $quantity,
                 'available_quantity' => $available,
                 'location' => 'Library - ' . $b['genre'] . ' Section',
                 'description' => 'Standard college textbook for ' . $b['genre'] . ' courses',
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
@@ -188,6 +241,11 @@ class DatabaseSeederController extends Controller
      */
     private function runSystemSettingsSeeder()
     {
+        // Check if system_settings table exists
+        if (!Schema::hasTable('system_settings')) {
+            throw new \Exception('System settings table does not exist. Please run migrations first.');
+        }
+
         $settings = [
             ['key' => 'system_name', 'value' => 'LibraFlow Library Management System'],
             ['key' => 'borrowing_days', 'value' => '14'],
@@ -200,9 +258,9 @@ class DatabaseSeederController extends Controller
         ];
 
         foreach ($settings as $setting) {
-            \App\Models\SystemSetting::updateOrCreate(
+            DB::table('system_settings')->updateOrCreate(
                 ['key' => $setting['key']],
-                ['value' => $setting['value'], 'type' => 'string']
+                ['value' => $setting['value'], 'type' => 'string', 'updated_at' => now()]
             );
         }
 
