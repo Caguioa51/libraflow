@@ -9,6 +9,7 @@ use App\Http\Controllers\BorrowingController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemSettingsController;
+use App\Http\Controllers\DatabaseSeederController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -97,3 +98,6 @@ Route::prefix('api')->middleware('api')->group(function () {
     Route::post('/testing/borrow/no-csrf', [\App\Http\Controllers\BorrowingController::class, 'testingBorrowNoCsrf'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });
+
+// Database Seeder Routes
+require __DIR__.'/database-seeder.php';
