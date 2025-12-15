@@ -388,8 +388,8 @@ class BorrowingController extends Controller
                 'student_id' => $user->student_id,
                 'role' => $user->role,
                 'profile_photo' => $user->profile_photo_url,
-            ]);
-        } elseif ($users->count() > 1) {
+            ($users->count ]);
+        } elseif() > 1) {
             // If multiple users found, return list for selection
             return response()->json([
                 'multiple' => true,
@@ -466,4 +466,9 @@ class BorrowingController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'book_id' => 'required|
+            'book_id' => 'required|exists:books,id',
+        ]);
+
+        $userId = $validated['user_id'];
+        $book = Book::find($validated['book_id']);
+        $available =
