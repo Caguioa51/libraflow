@@ -388,8 +388,8 @@ class BorrowingController extends Controller
                 'student_id' => $user->student_id,
                 'role' => $user->role,
                 'profile_photo' => $user->profile_photo_url,
-            ($users->count ]);
-        } elseif() > 1) {
+            ]);
+        } elseif ($users->count() > 1) {
             // If multiple users found, return list for selection
             return response()->json([
                 'multiple' => true,
@@ -471,4 +471,29 @@ class BorrowingController extends Controller
 
         $userId = $validated['user_id'];
         $book = Book::find($validated['book_id']);
-        $available =
+        $available = is_null($book->available_quantity) ? ($book->quantity ?? 1) : $book->available_quantity;
+        if ($book->status !== 'available' || $available <= 0) {
+            return response()->json(['success' => false, 'message' => 'Not available'], 409);
+        }
+
+        \DB::beginTransaction();
+        try {
+            $borrowing = Borrowing::create([
+                'user_id' => $userId,
+                'book_id' => $book->id,
+                'borrowed_at' => now(),
+                'status' => 'borrowed',
+                'due_date' => now()->addDays(SystemSetting::get('borrowing_duration_days', 14)),
+            ]);
+            $newAvailable = max(0, ($available - 1));
+            $book->available_quantity = $newAvailable;
+            $book->status = $newAvailable <= 0 ? 'borrowed' : 'available';
+            $book->save();
+            \DB::commit();
+            return response()->json(['success' => true, 'borrowing_id' => $borrowing->id], 201);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed'], 500);
+        }
+    }
+}
