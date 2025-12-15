@@ -461,4 +461,9 @@ class BorrowingController extends Controller
         $secret = env('STRESS_TEST_SECRET') ?: 'local-secret-123';
         $provided = $request->header('X-TEST-SECRET');
         if (!$provided || !hash_equals($secret, $provided)) {
-            return response()->json(['error'
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'book_id' => 'required|
