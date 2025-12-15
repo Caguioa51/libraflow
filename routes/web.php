@@ -9,6 +9,72 @@ use App\Http\Controllers\BorrowingController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SystemSettingsController;
+use App\Http\Controllers\DatabaseSeederController;
+
+// ULTRA-SIMPLE ADMIN CREATION ROUTE - WORKS EVEN WITHOUT MIGRATIONS
+Route::get('/create-admin-simple', function () {
+    try {
+        // Connect to database
+        $pdo = new PDO("pgsql:host=" . env('DB_HOST') . ";port=" . env('DB_PORT') . ";dbname=" . env('DB_DATABASE'), env('DB_USERNAME'), env('DB_PASSWORD'));
+        
+        // Hash password
+        $hashedPassword = password_hash('admin123', PASSWORD_DEFAULT);
+        
+        // Create admin user with raw SQL
+        $sql = "INSERT INTO users (name, email, email_verified_at, password, role, created_at, updated_at) 
+                VALUES (:name, :email, NOW(), :password, :role, NOW(), NOW())
+                ON CONFLICT (email) DO UPDATE SET 
+                name = EXCLUDED.name,
+                password = EXCLUDED.password,
+                role = EXCLUDED.role,
+                updated_at = NOW()";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            'name' => 'Administrator',
+            'email' => 'admin@libraflow.com',
+            'password' => $hashedPassword,
+            'role' => 'admin'
+        ]);
+        
+        return "<h1>✅ Admin Created Successfully!</h1>
+               <p><strong>Email:</strong> admin@libraflow.com</p>
+               <p><strong>Password:</strong> admin123</p>
+               <p><a href='/login'>Go to Login Page</a></p>";
+               
+    } catch (Exception $e) {
+        return "<h1>❌ Error Creating Admin</h1>
+               <p>Error: " . $e->getMessage() . "</p>
+               <p>Please check your database connection and ensure migrations have been run.</p>";
+    }
+})->name('create-admin-simple');
+
+// DEBUG ROUTE - Test basic functionality
+Route::get('/debug-test', function () {
+    try {
+        // Test basic database connection
+        $pdo = new PDO("pgsql:host=" . env('DB_HOST') . ";port=" . env('DB_PORT') . ";dbname=" . env('DB_DATABASE'), env('DB_USERNAME'), env('DB_PASSWORD'));
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM users");
+        $userCount = $stmt->fetch()['count'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM books");
+        $bookCount = $stmt->fetch()['count'];
+        
+        $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrowings");
+        $borrowingCount = $stmt->fetch()['count'];
+        
+        return "<h1>✅ Database Connection Test</h1>
+               <p><strong>Users:</strong> {$userCount}</p>
+               <p><strong>Books:</strong> {$bookCount}</p>
+               <p><strong>Borrowings:</strong> {$borrowingCount}</p>
+               <p><strong>Status:</strong> Database is working!</p>";
+               
+    } catch (Exception $e) {
+        return "<h1>❌ Database Connection Error</h1>
+               <p>Error: " . $e->getMessage() . "</p>
+               <p>Please check your database configuration.</p>";
+    }
+})->name('debug-test');
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,6 +98,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('authors', AuthorController::class);
     Route::resource('borrowings', BorrowingController::class);
     Route::patch('borrowings/{borrowing}/return', [BorrowingController::class, 'update'])->name('borrowings.return');
+    
+    // FIXED: Both POST and GET routes for mark-as-returned
+    Route::post('borrowings/{borrowing}/mark-as-returned', [BorrowingController::class, 'markAsReturned'])->name('borrowings.mark-as-returned');
+    Route::get('borrowings/{borrowing}/mark-as-returned', [BorrowingController::class, 'markAsReturned'])->name('borrowings.mark-as-returned-get');
+    
     Route::get('/my-borrowings', [BorrowingController::class, 'myHistory'])->name('borrowings.my_history');
     Route::get('/admin/report', [BorrowingController::class, 'report'])->name('borrowings.report');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
@@ -67,6 +138,8 @@ Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(
     Route::post('/admin/settings', [\App\Http\Controllers\SystemSettingsController::class, 'update'])->name('admin.settings.update');
     // User management for admins
     Route::get('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::get('/admin/users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('admin.users.create');
+    Route::post('/admin/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('admin.users.store');
     Route::get('/admin/users/{user}/borrow', [\App\Http\Controllers\Admin\UserManagementController::class, 'borrowForUser'])->name('admin.users.borrow_for_user');
     Route::get('/admin/users/{user}/history', [\App\Http\Controllers\Admin\UserManagementController::class, 'viewHistory'])->name('admin.users.view_history');
     Route::post('/admin/users/update-student-id', [\App\Http\Controllers\Admin\UserManagementController::class, 'updateStudentId'])->name('admin.users.update_student_id');
@@ -97,3 +170,6 @@ Route::prefix('api')->middleware('api')->group(function () {
     Route::post('/testing/borrow/no-csrf', [\App\Http\Controllers\BorrowingController::class, 'testingBorrowNoCsrf'])
         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 });
+
+// Database Seeder Routes
+require __DIR__.'/database-seeder.php';

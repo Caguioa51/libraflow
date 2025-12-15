@@ -28,9 +28,8 @@
                 <td>
                     @if(auth()->user()->isAdmin())
                         @if($borrowing->status === 'borrowed')
-                        <form action="{{ route('borrowings.return', $borrowing) }}" method="POST" style="display:inline-block">
+                        <form action="{{ route('borrowings.mark-as-returned', $borrowing) }}" method="POST" style="display:inline-block">
                             @csrf
-                            @method('PATCH')
                             <button class="btn btn-success btn-sm">Mark as Returned</button>
                         </form>
                         @endif
